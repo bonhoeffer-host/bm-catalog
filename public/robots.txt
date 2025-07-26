@@ -1,0 +1,19 @@
+# Robots.txt for Bonhoeffer Machines Catalog
+
+User-agent: *
+Allow: /
+
+# Allow all search engines to crawl the site
+Allow: /catalog/
+Allow: /api/
+
+# Disallow crawling of private or unnecessary paths
+Disallow: /private/
+Disallow: /_next/
+Disallow: /api/internal/
+
+# Sitemap location
+Sitemap: https://catalog.bonhoeffermachines.com/sitemap.xml
+
+# Crawl delay (optional - adjust based on server capacity)
+Crawl-delay: 1

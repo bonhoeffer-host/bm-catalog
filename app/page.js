@@ -70,7 +70,7 @@ export default function Home() {
         </motion.div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 w-full max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 w-full max-w-7xl mx-auto pb-10">
         {filtered.length === 0 && (
           <div className="col-span-full text-center text-gray-500">No catalogs found.</div>
         )}
@@ -93,7 +93,7 @@ export default function Home() {
 
             {/* Content Section */}
             <div className="px-3 py-3">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-[#989b2e] transition-colors duration-200">
                 {cat.title}
               </h3>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-4">

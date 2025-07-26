@@ -1,9 +1,10 @@
 "use client";
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { MdZoomIn, MdZoomOut, MdFullscreen, MdFullscreenExit, MdPrint, MdDownload, MdShare, MdChevronLeft, MdChevronRight, MdGridView, MdClose, MdContentCopy } from "react-icons/md";
-import { FaWhatsapp, FaXTwitter, FaFacebook, FaLinkedin, FaEnvelope } from "react-icons/fa6";
+import { FaWhatsapp, FaXTwitter, FaFacebook, FaLinkedin, FaEnvelope, FaHouse } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
 import HTMLFlipBook from "react-pageflip";
+import Link from "next/link";
 
 function isMobile() {
   if (typeof window === "undefined") return false;
@@ -73,7 +74,18 @@ export default function ViewerClient({ catalog, images, searchParams }) {
     }
   }, [isMobileView]);
 
-  const goToPage = (p) => setCurrentPage(p);
+  const goToPage = (p) => {
+    setCurrentPage(p);
+    
+    // If using flipbook, also update the flipbook position
+    if (!isMobileView && bookRef.current) {
+      try {
+        bookRef.current.pageFlip().turnToPage(p - 1);
+      } catch (error) {
+        console.log('Flipbook navigation error:', error);
+      }
+    }
+  };
 
   // Print/download
   const printPDF = () => window.open(catalog.pdf, "_blank");
@@ -119,11 +131,23 @@ export default function ViewerClient({ catalog, images, searchParams }) {
   // Progress bar
   const progress = ((currentPage - 1) / (totalPages - 1)) * 100;
   const handleProgressClick = (e) => {
-    const rect = e.target.getBoundingClientRect();
+    const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const pct = x / rect.width;
     const page = Math.round(1 + pct * (totalPages - 1));
-    setCurrentPage(page);
+    const newPage = Math.max(1, Math.min(page, totalPages));
+    
+    // Update the page
+    setCurrentPage(newPage);
+    
+    // If using flipbook, also update the flipbook position
+    if (!isMobileView && bookRef.current) {
+      try {
+        bookRef.current.pageFlip().turnToPage(newPage - 1);
+      } catch (error) {
+        console.log('Flipbook navigation error:', error);
+      }
+    }
   };
 
   // Social share links
@@ -162,8 +186,24 @@ export default function ViewerClient({ catalog, images, searchParams }) {
 
   return (
     <div ref={containerRef} className="h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col relative overflow-hidden">
-      {/* Header with title in top right */}
-      <div className="absolute top-4 left-4 z-10">
+      {/* Breadcrumb */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-2">
+        <div className="flex items-center space-x-2 text-sm">
+          <Link
+            href="/"
+            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center"
+          >
+            <FaHouse className="h-4 w-4 mr-1" />
+            Home
+          </Link>
+          <span className="text-gray-500 dark:text-gray-400">/</span>
+          <span className="text-gray-900 dark:text-white font-medium truncate">
+            {catalog.title.toUpperCase()}
+          </span>
+        </div>
+      </div>
+      {/* Header with title in top left */}
+      {/* <div className="absolute top-8 left-4 z-10">
         <motion.h1
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -172,32 +212,34 @@ export default function ViewerClient({ catalog, images, searchParams }) {
         >
           {catalog.title}
         </motion.h1>
-      </div>
+      </div> */}
 
       {/* Main Viewer Area */}
-      <div className="flex-1 flex items-center justify-center px-4 py-4">
+      <div className="flex-1 flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex items-center gap-6 w-full h-full"
+          className="flex flex-col sm:flex-row items-center gap-6 w-full h-full"
         >
+          {/* Navigation buttons - left/right on desktop, hidden on mobile */}
           <motion.button 
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={prevPage} 
             disabled={currentPage === 1} 
-            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
+            className="hidden sm:flex bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
           >
             <MdChevronLeft size={32} />
           </motion.button>
           
-          <div className="flex-1 flex justify-center items-center h-full">
+          {/* Book viewer container */}
+          <div className="flex-1 flex flex-col items-center justify-center h-full w-full">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="rounded-2xl shadow-2xl p-4 w-[80%] flex items-center justify-center"
+              className="rounded-2xl shadow-2xl p-4 w-full sm:w-[80%] flex items-center justify-center"
             >
               {isMobileView ? (
                 <div className="flex justify-center">
@@ -253,14 +295,38 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                 </HTMLFlipBook>
               )}
             </motion.div>
+
+            {/* Navigation buttons - below book on mobile */}
+            <div className="sm:hidden flex items-center justify-center gap-6 mt-4">
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={prevPage} 
+                disabled={currentPage === 1} 
+                className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
+              >
+                <MdChevronLeft size={32} />
+              </motion.button>
+              
+              <motion.button 
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={nextPage} 
+                disabled={currentPage >= totalPages} 
+                className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
+              >
+                <MdChevronRight size={32} />
+              </motion.button>
+            </div>
           </div>
           
+          {/* Right navigation button - desktop only */}
           <motion.button 
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={nextPage} 
             disabled={currentPage >= totalPages} 
-            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
+            className="hidden sm:flex bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
           >
             <MdChevronRight size={32} />
           </motion.button>
@@ -272,104 +338,133 @@ export default function ViewerClient({ catalog, images, searchParams }) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
-        className="bg-gray-800/90 backdrop-blur-sm border-t border-gray-700 p-4"
+        className="bg-gray-800/90 backdrop-blur-sm border-t border-gray-700"
       >
-        <div className="mx-auto flex items-center justify-between gap-2">
-          {/* Left - Zoom Controls */}
-          <div className="flex gap-2">
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={zoomOut} 
-              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
-              title="Zoom out"
-            >
-              <MdZoomOut size={18} />
-              <span className="hidden sm:inline text-sm">Zoom Out</span>
-            </motion.button>
-            
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={zoomIn} 
-              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
-              title="Zoom in"
-            >
-              <MdZoomIn size={18} />
-              <span className="hidden sm:inline text-sm">Zoom In</span>
-            </motion.button>
-          </div>
-
-          {/* Center - Page Info and Progress */}
-          <div className="flex-1 flex flex-col items-center gap-2 max-w-md">
+        {/* Progress Bar for small screens - at top */}
+        <div className="sm:hidden px-4 py-2 border-b border-gray-700">
+          <div className="flex flex-col items-center gap-2">
             <div className="text-gray-300 text-sm font-medium">
               {getPages().length === 2
                 ? `Pages ${getPages()[0]}-${getPages()[1]} of ${totalPages}`
                 : `Page ${getPages()[0]} of ${totalPages}`}
             </div>
             
-            <div className="w-full bg-gray-700 rounded-full h-2 cursor-pointer shadow-inner" onClick={handleProgressClick} title="Jump to page">
+            <div className="w-full bg-gray-700 rounded-full h-3 cursor-pointer shadow-inner relative" onClick={handleProgressClick} title="Jump to page">
               <motion.div 
-                className="h-2 bg-gradient-to-r from-[#989b2e] to-[#b8bb35] rounded-full shadow-sm"
+                className="h-3 bg-gradient-to-r from-[#989b2e] to-[#b8bb35] rounded-full shadow-sm relative pointer-events-none"
                 style={{ width: `${progress}%` }}
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{ duration: 0.5 }}
-              />
+              >
+                {/* Circle indicator at the tip */}
+                <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md  pointer-events-none"></div>
+              </motion.div>
             </div>
           </div>
+        </div>
 
-          {/* Right - Action Buttons */}
-          <div className="flex gap-2">
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setFullscreen((f) => !f)} 
-              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
-              title="Fullscreen"
-            >
-              {fullscreen ? <MdFullscreenExit size={18} /> : <MdFullscreen size={18} />} <span className="hidden sm:inline text-sm">{fullscreen ? 'Exit' : 'Enter'} Full Screen</span>
-            </motion.button>
-            
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={printPDF} 
-              className="bg-[#989b2e] hover:bg-[#7a7c25] text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
-              title="Print"
-            >
-              <MdPrint size={18} /><span className="hidden sm:inline text-sm"> Print</span>
-            </motion.button>
-            
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={downloadPDF} 
-              className="bg-[#989b2e] hover:bg-[#7a7c25] text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
-              title="Download"
-            >
-              <MdDownload size={18} /><span className="hidden sm:inline text-sm"> Download</span>
-            </motion.button>
-            
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShareOpen(true)} 
-              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
-              title="Share"
-            >
-              <MdShare size={18} /><span className="hidden sm:inline text-sm"> Share</span>
-            </motion.button>
-            
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={openThumbs} 
-              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
-              title="Thumbnails"
-            >
-              <MdGridView size={18} /><span className="hidden sm:inline text-sm"> Pages</span>
-            </motion.button>
+        <div className="p-4">
+          <div className="mx-auto flex items-center justify-between gap-2">
+            {/* Left - Zoom Controls */}
+            <div className="flex gap-2">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={zoomOut} 
+                className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+                title="Zoom out"
+              >
+                <MdZoomOut size={18} />
+                <span className="hidden lg:inline text-sm">Zoom Out</span>
+              </motion.button>
+              
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={zoomIn} 
+                className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+                title="Zoom in"
+              >
+                <MdZoomIn size={18} />
+                <span className="hidden lg:inline text-sm">Zoom In</span>
+              </motion.button>
+            </div>
+
+            {/* Center - Page Info and Progress (hidden on small screens) */}
+            <div className="hidden sm:flex flex-1 flex-col items-center gap-2 max-w-md">
+              <div className="text-gray-300 text-sm font-medium">
+                {getPages().length === 2
+                  ? `Pages ${getPages()[0]}-${getPages()[1]} of ${totalPages}`
+                  : `Page ${getPages()[0]} of ${totalPages}`}
+              </div>
+              
+              <div className="w-full bg-gray-700 rounded-full h-3 cursor-pointer shadow-inner relative" onClick={handleProgressClick} title="Jump to page">
+                <motion.div 
+                  className="h-3 bg-gradient-to-r from-[#989b2e] to-[#b8bb35] rounded-full shadow-sm relative pointer-events-none"
+                  style={{ width: `${progress}%` }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {/* Circle indicator at the tip */}
+                  <div className="absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-md  pointer-events-none"></div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Right - Action Buttons */}
+            <div className="flex gap-2">
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setFullscreen((f) => !f)} 
+                className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+                title="Fullscreen"
+              >
+                {fullscreen ? <MdFullscreenExit size={18} /> : <MdFullscreen size={18} />} <span className="hidden lg:inline text-sm">{fullscreen ? 'Exit' : 'Enter'} Full Screen</span>
+              </motion.button>
+              
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={printPDF} 
+                className="bg-[#989b2e] hover:bg-[#7a7c25] text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+                title="Print"
+              >
+                <MdPrint size={18} /><span className="hidden lg:inline text-sm"> Print</span>
+              </motion.button>
+              
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={downloadPDF} 
+                className="bg-[#989b2e] hover:bg-[#7a7c25] text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+                title="Download"
+              >
+                <MdDownload size={18} /><span className="hidden lg:inline text-sm"> Download</span>
+              </motion.button>
+              
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShareOpen(true)} 
+                className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+                title="Share"
+              >
+                <MdShare size={18} /><span className="hidden lg:inline text-sm"> Share</span>
+              </motion.button>
+              
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={openThumbs} 
+                className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+                title="Thumbnails"
+              >
+                <MdGridView size={18} /><span className="hidden lg:inline text-sm"> Pages</span>
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -407,7 +502,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className="cursor-pointer bg-gray-700 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 group" 
-                    onClick={() => { setCurrentPage(i + 1); closeThumbs(); }}
+                    onClick={() => { goToPage(i + 1); closeThumbs(); }}
                   >
                     <div className="aspect-[3/4] overflow-hidden">
                       <img 
