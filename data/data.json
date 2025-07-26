@@ -1,0 +1,52 @@
+{
+  "catalog": [
+    {
+      "id": "1",
+      "title": "Stronwell",
+      "link": "/pages/stronwell",
+      "pdf": "/pdf/stronwell.pdf",
+      "slug": "stronwell",
+      "date": "July 16, 2025"
+    },
+    {
+      "id": "2",
+      "title": "Stevron Hand Tools",
+      "link": "/pages/stevron-hand-tools",
+      "pdf": "/pdf/stevron-hand-tools.pdf",
+      "slug": "stevron-hand-tools",
+      "date": "July 21, 2025"
+    },
+    {
+      "id": "3",
+      "title": "Stevron Accessories",
+      "link": "/pages/stevron-accessories",
+      "pdf": "/pdf/stevron-accessories.pdf",
+      "slug": "stevron-accessories",
+      "date": "July 09, 2025"
+    },
+    {
+      "id": "4",
+      "title": "Bonhoeffer Construction",
+      "link": "/pages/bonhoeffer-construction",
+      "pdf": "/pdf/bonhoeffer-construction.pdf",
+      "slug": "bonhoeffer-construction",
+      "date": "July 16, 2025"
+    },
+    {
+      "id": "5",
+      "title": "Bonhoeffer Dos Estrellas",
+      "link": "/pages/bonhoeffer-dos-estrellas",
+      "pdf": "/pdf/bonhoeffer-dos-estrellas.pdf",
+      "slug": "bonhoeffer-dos-estrellas",
+      "date": "July 21, 2025"
+    },
+    {
+      "id": "6",
+      "title": "Generic Spare Parts",
+      "link": "/pages/generic-spare-parts",
+      "pdf": "/pdf/generic-spare-parts.pdf",
+      "slug": "generic-spare-parts",
+      "date": "July 09, 2025"
+    }
+  ]
+}
