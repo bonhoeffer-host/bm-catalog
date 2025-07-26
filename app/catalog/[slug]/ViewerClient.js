@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { MdZoomIn, MdZoomOut, MdFullscreen, MdFullscreenExit, MdPrint, MdDownload, MdShare, MdChevronLeft, MdChevronRight, MdGridView, MdClose, MdContentCopy } from "react-icons/md";
 import { FaWhatsapp, FaXTwitter, FaFacebook, FaLinkedin, FaEnvelope } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
@@ -57,8 +57,22 @@ export default function ViewerClient({ catalog, images, searchParams }) {
   const zoomOut = () => setZoom((z) => Math.max(z - 0.2, 0.5));
 
   // Navigation
-  const nextPage = () => setCurrentPage((p) => Math.min(p + (isMobileView ? 1 : 2), totalPages));
-  const prevPage = () => setCurrentPage((p) => Math.max(p - (isMobileView ? 1 : 2), 1));
+  const nextPage = useCallback(() => {
+    if (!isMobileView && bookRef.current) {
+      bookRef.current.pageFlip().flipNext();
+    } else {
+      setCurrentPage((p) => Math.min(p + (isMobileView ? 1 : 2), totalPages));
+    }
+  }, [isMobileView, totalPages]);
+
+  const prevPage = useCallback(() => {
+    if (!isMobileView && bookRef.current) {
+      bookRef.current.pageFlip().flipPrev();
+    } else {
+      setCurrentPage((p) => Math.max(p - (isMobileView ? 1 : 2), 1));
+    }
+  }, [isMobileView]);
+
   const goToPage = (p) => setCurrentPage(p);
 
   // Print/download
@@ -72,26 +86,34 @@ export default function ViewerClient({ catalog, images, searchParams }) {
 
   // Share
   const shareUrl = () => {
+    if (typeof window === "undefined") return "";
     let url = `${window.location.origin}/catalog/${catalog.slug}`;
     if (shareCurrent) url += `?page=${currentPage}`;
     return url;
   };
   const copyLink = () => {
-    navigator.clipboard.writeText(shareUrl());
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
+    if (typeof navigator !== "undefined") {
+      navigator.clipboard.writeText(shareUrl());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    }
   };
 
   // Thumbnails
   const openThumbs = () => setShowThumbs(true);
   const closeThumbs = () => setShowThumbs(false);
 
-  // Responsive: fallback to single page on mobile
+  // Responsive: show 2 pages at a time on desktop, 1 on mobile
   const getPages = () => {
-    if (isMobileView || totalPages < 3) return [currentPage];
+    if (isMobileView) return [currentPage];
+    
+    // For desktop, show 2 pages at a time
     if (currentPage === 1) return [1];
     if (currentPage === totalPages) return [totalPages];
-    return [currentPage, currentPage + 1 <= totalPages ? currentPage + 1 : currentPage];
+    
+    // Show current page and next page (if available)
+    const nextPageNum = currentPage + 1 <= totalPages ? currentPage + 1 : currentPage;
+    return currentPage % 2 === 0 ? [currentPage - 1, currentPage] : [currentPage, nextPageNum];
   };
 
   // Progress bar
@@ -104,125 +126,253 @@ export default function ViewerClient({ catalog, images, searchParams }) {
     setCurrentPage(page);
   };
 
-  // Book flip animation (react-pageflip)
-  // Only show on desktop, fallback to fade on mobile
-  const Book = ({ children }) => {
-    if (isMobileView) return <div>{children}</div>;
-    return (
-      <HTMLFlipBook
-        width={600 * zoom}
-        height={800 * zoom}
-        size="stretch"
-        minWidth={300}
-        maxWidth={1200}
-        minHeight={400}
-        maxHeight={1600}
-        maxShadowOpacity={0.5}
-        showCover={true}
-        mobileScrollSupport={true}
-        ref={bookRef}
-        startPage={currentPage - 1}
-        onFlip={(e) => setCurrentPage(e.data + 1)}
-        className="mx-auto"
-      >
-        {images.map((img, i) => (
-          <div key={img} className="flex items-center justify-center bg-white">
-            <img
-              src={`/pages/${catalog.slug}/${img}`}
-              alt={`Page ${i + 1}`}
-              style={{ transform: `scale(${zoom})` }}
-              className="w-full h-full object-contain"
-              draggable={false}
-            />
-          </div>
-        ))}
-      </HTMLFlipBook>
-    );
-  };
-
   // Social share links
-  const socialLinks = [
-    {
-      icon: <FaXTwitter />,
-      label: "X",
-      url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl())}`,
-    },
-    {
-      icon: <FaWhatsapp />,
-      label: "WhatsApp",
-      url: `https://wa.me/?text=${encodeURIComponent(shareUrl())}`,
-    },
-    {
-      icon: <FaFacebook />,
-      label: "Facebook",
-      url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl())}`,
-    },
-    {
-      icon: <FaLinkedin />,
-      label: "LinkedIn",
-      url: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl())}`,
-    },
-    {
-      icon: <FaEnvelope />,
-      label: "Email",
-      url: `mailto:?subject=${encodeURIComponent(catalog.title)}&body=${encodeURIComponent(shareUrl())}`,
-    },
-  ];
+  const socialLinks = useMemo(() => {
+    const url = shareUrl();
+    if (!url) return [];
+    
+    return [
+      {
+        icon: <FaXTwitter />,
+        label: "X",
+        url: `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}`,
+      },
+      {
+        icon: <FaWhatsapp />,
+        label: "WhatsApp",
+        url: `https://wa.me/?text=${encodeURIComponent(url)}`,
+      },
+      {
+        icon: <FaFacebook />,
+        label: "Facebook",
+        url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+      },
+      {
+        icon: <FaLinkedin />,
+        label: "LinkedIn",
+        url: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(url)}`,
+      },
+      {
+        icon: <FaEnvelope />,
+        label: "Email",
+        url: `mailto:?subject=${encodeURIComponent(catalog.title)}&body=${encodeURIComponent(url)}`,
+      },
+    ];
+  }, [catalog.slug, catalog.title, currentPage, shareCurrent]);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-white flex flex-col items-center py-4 px-2 relative">
-      <div className="w-full max-w-4xl flex flex-col items-center">
-        <div className="flex flex-wrap gap-2 mb-2 w-full justify-between items-center">
-          <div className="font-bold text-xl mb-2">{catalog.title}</div>
-          <div className="flex gap-2">
-            <button onClick={zoomOut} className="p-2" title="Zoom out"><MdZoomOut size={22} /></button>
-            <button onClick={zoomIn} className="p-2" title="Zoom in"><MdZoomIn size={22} /></button>
-            <button onClick={() => setFullscreen((f) => !f)} className="p-2" title="Fullscreen">
-              {fullscreen ? <MdFullscreenExit size={22} /> : <MdFullscreen size={22} />}
-            </button>
-            <button onClick={printPDF} className="p-2" title="Print"><MdPrint size={22} /></button>
-            <button onClick={downloadPDF} className="p-2" title="Download"><MdDownload size={22} /></button>
-            <button onClick={() => setShareOpen(true)} className="p-2" title="Share"><MdShare size={22} /></button>
-            <button onClick={openThumbs} className="p-2" title="Thumbnails"><MdGridView size={22} /></button>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 mb-2 w-full justify-center">
-          <button onClick={prevPage} disabled={currentPage === 1} className="p-2 disabled:opacity-30"><MdChevronLeft size={28} /></button>
-          <div className="flex-1 flex justify-center">
-            <Book>
-              {getPages().map((p) => (
-                <motion.div
-                  key={p}
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center justify-center w-[300px] h-[400px] sm:w-[400px] sm:h-[600px] md:w-[600px] md:h-[800px] bg-white border shadow"
-                >
-                  <img
-                    src={`/pages/${catalog.slug}/${catalog.slug}-${p}_1.webp`}
-                    alt={`Page ${p}`}
-                    style={{ transform: `scale(${zoom})` }}
-                    className="object-contain max-h-full max-w-full"
-                    draggable={false}
-                  />
-                </motion.div>
-              ))}
-            </Book>
-          </div>
-          <button onClick={nextPage} disabled={currentPage >= totalPages} className="p-2 disabled:opacity-30"><MdChevronRight size={28} /></button>
-        </div>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-gray-600 text-sm">
-            {getPages().length === 2
-              ? `${getPages()[0]}-${getPages()[1]} / ${totalPages}`
-              : `${getPages()[0]} / ${totalPages}`}
-          </span>
-        </div>
-        <div className="w-full max-w-2xl h-2 bg-gray-200 rounded mb-4 cursor-pointer" onClick={handleProgressClick} title="Jump to page">
-          <div className="h-2 bg-blue-500 rounded" style={{ width: `${progress}%` }} />
-        </div>
+    <div ref={containerRef} className="h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col relative overflow-hidden">
+      {/* Header with title in top right */}
+      <div className="absolute top-4 left-4 z-10">
+        <motion.h1
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-xl md:text-2xl font-bold text-white bg-black/30 backdrop-blur-sm px-4 py-2 rounded-lg"
+        >
+          {catalog.title}
+        </motion.h1>
       </div>
+
+      {/* Main Viewer Area */}
+      <div className="flex-1 flex items-center justify-center px-4 py-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex items-center gap-6 w-full h-full"
+        >
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={prevPage} 
+            disabled={currentPage === 1} 
+            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
+          >
+            <MdChevronLeft size={32} />
+          </motion.button>
+          
+          <div className="flex-1 flex justify-center items-center h-full">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-2xl shadow-2xl p-4 w-[80%] flex items-center justify-center"
+            >
+              {isMobileView ? (
+                <div className="flex justify-center">
+                  {getPages().map((p) => (
+                    <div
+                      key={p}
+                      className="flex items-center justify-center bg-white rounded-lg overflow-hidden mx-2"
+                      style={{ 
+                        width: 'auto', 
+                        height: '50vh',
+                        maxHeight: '70vh',
+                        flexShrink: 0
+                      }}
+                    >
+                      <img
+                        src={`/pages/${catalog.slug}/${catalog.slug}-${p}_1.webp`}
+                        alt={`Page ${p}`}
+                        style={{ transform: `scale(${zoom})` }}
+                        className="object-contain max-h-full max-w-full rounded-lg"
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <HTMLFlipBook
+                  width={600 * zoom}
+                  height={800 * zoom}
+                  size="stretch"
+                  minWidth={300}
+                  maxWidth={1200}
+                  minHeight={400}
+                  maxHeight={1600}
+                  maxShadowOpacity={0.5}
+                  showCover={true}
+                  mobileScrollSupport={true}
+                  ref={bookRef}
+                  onFlip={(e) => setCurrentPage(e.data + 1)}
+                  className="mx-auto"
+                  key={`flipbook-${catalog.slug}`} // Stable key based on catalog
+                >
+                  {images.map((img, i) => (
+                    <div key={`page-${i}`} className="flex items-center justify-center bg-white">
+                      <img
+                        src={`/pages/${catalog.slug}/${img}`}
+                        alt={`Page ${i + 1}`}
+                        style={{ transform: `scale(${zoom})` }}
+                        className="w-full h-full object-contain"
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
+                </HTMLFlipBook>
+              )}
+            </motion.div>
+          </div>
+          
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={nextPage} 
+            disabled={currentPage >= totalPages} 
+            className="bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:opacity-30 text-white p-4 rounded-full transition-all duration-200 shadow-lg flex-shrink-0 cursor-pointer"
+          >
+            <MdChevronRight size={32} />
+          </motion.button>
+        </motion.div>
+      </div>
+
+      {/* Bottom Control Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+        className="bg-gray-800/90 backdrop-blur-sm border-t border-gray-700 p-4"
+      >
+        <div className="mx-auto flex items-center justify-between gap-2">
+          {/* Left - Zoom Controls */}
+          <div className="flex gap-2">
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={zoomOut} 
+              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+              title="Zoom out"
+            >
+              <MdZoomOut size={18} />
+              <span className="hidden sm:inline text-sm">Zoom Out</span>
+            </motion.button>
+            
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={zoomIn} 
+              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+              title="Zoom in"
+            >
+              <MdZoomIn size={18} />
+              <span className="hidden sm:inline text-sm">Zoom In</span>
+            </motion.button>
+          </div>
+
+          {/* Center - Page Info and Progress */}
+          <div className="flex-1 flex flex-col items-center gap-2 max-w-md">
+            <div className="text-gray-300 text-sm font-medium">
+              {getPages().length === 2
+                ? `Pages ${getPages()[0]}-${getPages()[1]} of ${totalPages}`
+                : `Page ${getPages()[0]} of ${totalPages}`}
+            </div>
+            
+            <div className="w-full bg-gray-700 rounded-full h-2 cursor-pointer shadow-inner" onClick={handleProgressClick} title="Jump to page">
+              <motion.div 
+                className="h-2 bg-gradient-to-r from-[#989b2e] to-[#b8bb35] rounded-full shadow-sm"
+                style={{ width: `${progress}%` }}
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </div>
+
+          {/* Right - Action Buttons */}
+          <div className="flex gap-2">
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setFullscreen((f) => !f)} 
+              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+              title="Fullscreen"
+            >
+              {fullscreen ? <MdFullscreenExit size={18} /> : <MdFullscreen size={18} />} <span className="hidden sm:inline text-sm">{fullscreen ? 'Exit' : 'Enter'} Full Screen</span>
+            </motion.button>
+            
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={printPDF} 
+              className="bg-[#989b2e] hover:bg-[#7a7c25] text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+              title="Print"
+            >
+              <MdPrint size={18} /><span className="hidden sm:inline text-sm"> Print</span>
+            </motion.button>
+            
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={downloadPDF} 
+              className="bg-[#989b2e] hover:bg-[#7a7c25] text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+              title="Download"
+            >
+              <MdDownload size={18} /><span className="hidden sm:inline text-sm"> Download</span>
+            </motion.button>
+            
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShareOpen(true)} 
+              className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+              title="Share"
+            >
+              <MdShare size={18} /><span className="hidden sm:inline text-sm"> Share</span>
+            </motion.button>
+            
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={openThumbs} 
+              className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200 flex items-center gap-2 cursor-pointer" 
+              title="Thumbnails"
+            >
+              <MdGridView size={18} /><span className="hidden sm:inline text-sm"> Pages</span>
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
       {/* Thumbnails Modal */}
       <AnimatePresence>
         {showThumbs && (
@@ -230,19 +380,49 @@ export default function ViewerClient({ catalog, images, searchParams }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/60 flex items-center justify-center"
+            className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-lg p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-              <button onClick={closeThumbs} className="absolute top-2 right-2 p-2"><MdClose size={22} /></button>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gray-800 rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto relative border border-gray-700 shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-white">All Pages</h3>
+                <motion.button 
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={closeThumbs} 
+                  className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200"
+                >
+                  <MdClose size={24} />
+                </motion.button>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                 {images.map((img, i) => (
-                  <div key={img} className="cursor-pointer border rounded overflow-hidden" onClick={() => { setCurrentPage(i + 1); closeThumbs(); }}>
-                    <img src={`/pages/${catalog.slug}/${img}`} alt={`Page ${i + 1}`} className="w-full h-24 object-cover" />
-                    <div className="text-xs text-center py-1">{i + 1}</div>
-                  </div>
+                  <motion.div 
+                    key={img} 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="cursor-pointer bg-gray-700 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200 group" 
+                    onClick={() => { setCurrentPage(i + 1); closeThumbs(); }}
+                  >
+                    <div className="aspect-[3/4] overflow-hidden">
+                      <img 
+                        src={`/pages/${catalog.slug}/${img}`} 
+                        alt={`Page ${i + 1}`} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+                      />
+                    </div>
+                    <div className="text-center py-2 bg-gray-700 text-white text-sm font-medium">
+                      Page {i + 1}
+                    </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -253,28 +433,88 @@ export default function ViewerClient({ catalog, images, searchParams }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
           >
-            <div className="bg-white rounded-lg p-6 max-w-sm w-full relative">
-              <button onClick={() => setShareOpen(false)} className="absolute top-2 right-2 p-2"><MdClose size={22} /></button>
-              <div className="font-bold mb-2">Share</div>
-              <div className="flex gap-2 mb-2 flex-wrap">
-                {socialLinks.map((s) => (
-                  <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" className="p-2 rounded bg-gray-100 hover:bg-gray-200 flex items-center gap-1">
-                    {s.icon} <span className="text-xs">{s.label}</span>
-                  </a>
-                ))}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="bg-gray-800 rounded-2xl p-6 max-w-md w-full relative border border-gray-700 shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-white">Share Catalog</h3>
+                <motion.button 
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShareOpen(false)} 
+                  className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg transition-all duration-200"
+                >
+                  <MdClose size={24} />
+                </motion.button>
               </div>
-              <label className="flex items-center gap-2 mb-2">
-                <input type="checkbox" checked={shareCurrent} onChange={e => setShareCurrent(e.target.checked)} />
-                Share current page
-              </label>
+              
+              <div className="mb-6">
+                <p className="text-gray-300 text-sm mb-4">Share this catalog on social media or copy the link</p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  {socialLinks.map((s) => (
+                    <motion.a 
+                      key={s.label} 
+                      href={s.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-lg transition-all duration-200 flex items-center gap-2 justify-center"
+                    >
+                      {s.icon} 
+                      <span className="text-sm font-medium">{s.label}</span>
+                    </motion.a>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="flex items-center gap-3 text-gray-300 mb-4">
+                  <input 
+                    type="checkbox" 
+                    checked={shareCurrent} 
+                    onChange={e => setShareCurrent(e.target.checked)}
+                    className="w-4 h-4 text-[#989b2e] bg-gray-700 border-gray-600 rounded focus:ring-[#989b2e] focus:ring-2"
+                  />
+                  <span className="text-sm">Share current page number</span>
+                </label>
+              </div>
+              
               <div className="flex gap-2 items-center">
-                <input type="text" value={shareUrl()} readOnly className="flex-1 border rounded px-2 py-1 text-xs" />
-                <button onClick={copyLink} className="p-2 bg-gray-100 rounded hover:bg-gray-200" title="Copy link"><MdContentCopy size={18} /></button>
-                {copied && <span className="text-green-600 text-xs">Copied!</span>}
+                <input 
+                  type="text" 
+                  value={shareUrl()} 
+                  readOnly 
+                  className="flex-1 bg-gray-700 border border-gray-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#989b2e]" 
+                />
+                <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={copyLink} 
+                  className="bg-[#989b2e] hover:bg-[#7a7c25] text-white p-2 rounded-lg transition-all duration-200" 
+                  title="Copy link"
+                >
+                  <MdContentCopy size={20} />
+                </motion.button>
               </div>
-            </div>
+              
+              {copied && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mt-3 text-center"
+                >
+                  <span className="text-green-400 text-sm font-medium">✓ Link copied to clipboard!</span>
+                </motion.div>
+              )}
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

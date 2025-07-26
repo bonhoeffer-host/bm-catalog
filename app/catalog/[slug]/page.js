@@ -3,7 +3,7 @@ import path from "path";
 import dynamic from "next/dynamic";
 
 export default async function CatalogViewer({ params, searchParams }) {
-  const { slug } = params;
+  const { slug } = await params;
   // Read catalog metadata
   const dataPath = path.join(process.cwd(), "data", "data.json");
   const data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
