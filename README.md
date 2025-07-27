@@ -1,7 +1,7 @@
 # 📚 Bonhoeffer Machines Catalog
 
 <div align="center">
-  <img src="/logo.png" alt="Bonhoeffer Machines" width="200" height="60">
+  <img src="public/logo.png" alt="Bonhoeffer Machines" width="200" height="60">
   
   **Interactive Digital Catalog Platform for Industrial Equipment**
   
