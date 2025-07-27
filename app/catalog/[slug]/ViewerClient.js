@@ -239,7 +239,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="rounded-2xl shadow-2xl p-4 w-full sm:w-[80%] flex items-center justify-center"
+              className="rounded-2xl shadow-2xl p-4 w-full sm:w-[80%] 2xl:w-[70%] flex items-center justify-center"
             >
               {isMobileView ? (
                 <div className="flex justify-center">
