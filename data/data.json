@@ -2,10 +2,10 @@
   "catalog": [
     {
       "id": "1",
-      "title": "Stevron Hand Tools",
-      "link": "/pages/stevron-hand-tools",
-      "pdf": "/pdf/stevron-hand-tools.pdf",
-      "slug": "stevron-hand-tools",
+      "title": "Stevron Tools",
+      "link": "/pages/stevron-tools",
+      "pdf": "/pdf/stevron-tools.pdf",
+      "slug": "stevron-tools",
       "date": "September 1, 2025"
     }
   ]

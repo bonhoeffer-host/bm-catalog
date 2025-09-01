@@ -85,7 +85,7 @@ export default function Home() {
             {/* Thumbnail Section */}
             <div className="bg-gray-700 overflow-hidden">
               <img
-                src={`/pages/${cat.slug}/${cat.slug}-1_1.webp`}
+                src={`/pages/${cat.slug}/${cat.slug}_1.webp`}
                 alt={cat.title}
                 className="object-cover transition-transform duration-300 hover:scale-110 w-full"
               />
