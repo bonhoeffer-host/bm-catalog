@@ -38,7 +38,7 @@ export default function Home() {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Bonhoeffer Machines <span className="text-[#989b2e]">Catalogs</span>
+            Stevron <span className="text-[#989b2e]">Catalogs</span>
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Browse and explore our comprehensive collection of catalogs.

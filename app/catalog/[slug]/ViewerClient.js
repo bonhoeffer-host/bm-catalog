@@ -282,12 +282,12 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                   key={`flipbook-${catalog.slug}`} // Stable key based on catalog
                 >
                   {images.map((img, i) => (
-                    <div key={`page-${i}`} className="flex items-center justify-center bg-white">
+                    <div key={`page-${i}`} className="flex items-center justify-center ">
                       <img
                         src={`/pages/${catalog.slug}/${img}`}
                         alt={`Page ${i + 1}`}
                         style={{ transform: `scale(${zoom})` }}
-                        className="w-full h-full object-contain"
+                        className="w-[95%] h-full object-contain"
                         draggable={false}
                       />
                     </div>
