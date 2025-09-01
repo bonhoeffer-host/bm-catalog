@@ -58,21 +58,29 @@ export default function ViewerClient({ catalog, images, searchParams }) {
   const zoomOut = () => setZoom((z) => Math.max(z - 0.2, 0.5));
 
   // Navigation
-  const nextPage = useCallback(() => {
-    if (!isMobileView && bookRef.current) {
-      bookRef.current.pageFlip().flipNext();
-    } else {
-      setCurrentPage((p) => Math.min(p + (isMobileView ? 1 : 2), totalPages));
-    }
-  }, [isMobileView, totalPages]);
+  // const nextPage = useCallback(() => {
+  //   if (!isMobileView && bookRef.current) {
+  //     bookRef.current.pageFlip().flipNext();
+  //   } else {
+  //     setCurrentPage((p) => Math.min(p + (isMobileView ? 1 : 2), totalPages));
+  //   }
+  // }, [isMobileView, totalPages]);
 
-  const prevPage = useCallback(() => {
-    if (!isMobileView && bookRef.current) {
-      bookRef.current.pageFlip().flipPrev();
-    } else {
-      setCurrentPage((p) => Math.max(p - (isMobileView ? 1 : 2), 1));
-    }
-  }, [isMobileView]);
+  const nextPage = useCallback(()=>{
+    bookRef.current.pageFlip().flipNext();
+  }, []);
+
+  const prevPage = useCallback(()=>{
+    bookRef.current.pageFlip().flipPrev();
+  }, []);
+
+  // const prevPage = useCallback(() => {
+  //   if (!isMobileView && bookRef.current) {
+  //     bookRef.current.pageFlip().flipPrev();
+  //   } else {
+  //     setCurrentPage((p) => Math.max(p - (isMobileView ? 1 : 2), 1));
+  //   }
+  // }, [isMobileView]);
 
   const goToPage = (p) => {
     setCurrentPage(p);
@@ -241,7 +249,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
               transition={{ duration: 0.5 }}
               className="rounded-2xl shadow-2xl p-4 w-full sm:w-[80%] 2xl:w-[70%] flex items-center justify-center"
             >
-              {isMobileView ? (
+              {/* {isMobileView ? (
                 <div className="flex justify-center">
                   {getPages().map((p) => (
                     <div
@@ -264,7 +272,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                     </div>
                   ))}
                 </div>
-              ) : (
+              ) : ( */}
                 <HTMLFlipBook
                   width={600 * zoom}
                   height={800 * zoom}
@@ -293,7 +301,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                     </div>
                   ))}
                 </HTMLFlipBook>
-              )}
+              {/* )} */}
             </motion.div>
 
             {/* Navigation buttons - below book on mobile */}
