@@ -9,23 +9,23 @@ const montserrat = Montserrat({
 
 export const metadata = {
   title: {
-    default: "Bonhoeffer Machines | Industrial Equipment Catalogs",
-    template: "%s | Bonhoeffer Machines"
+    default: "Stevron Tools | Industrial Equipment Catalogs",
+    template: "%s | Stevron Tools"
   },
-  description: "Browse comprehensive digital catalogs of industrial machinery and equipment from Bonhoeffer Machines. View detailed specifications, technical drawings, and product information in our interactive catalog viewer.",
+  description: "Browse comprehensive digital catalogs of industrial machinery and equipment from Stevron Tools. View detailed specifications, technical drawings, and product information in our interactive catalog viewer.",
   keywords: [
     "industrial machinery",
     "equipment catalogs",
     "manufacturing equipment",
-    "Bonhoeffer Machines",
+    "Stevron Tools",
     "technical specifications",
     "industrial products",
     "machinery catalog",
     "equipment documentation"
   ],
-  authors: [{ name: "Bonhoeffer Machines" }],
-  creator: "Bonhoeffer Machines",
-  publisher: "Bonhoeffer Machines",
+  authors: [{ name: "Stevron Tools" }],
+  creator: "Stevron Tools",
+  publisher: "Stevron Tools",
   robots: {
     index: true,
     follow: true,
@@ -55,30 +55,23 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://catalog.bonhoeffermachines.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://catalog.stevrontools.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Bonhoeffer Machines Catalog",
-    title: "Bonhoeffer Machines | Industrial Equipment Catalogs",
+    siteName: "Stevron Tools Catalog",
+    title: "Stevron Tools | Industrial Equipment Catalogs",
     description: "Browse comprehensive digital catalogs of industrial machinery and equipment. View detailed specifications and technical information in our interactive catalog viewer.",
-  },
-  twitter: {
-    card: "summary_large_image",
-    site: "@bonhoeffermachines", // Replace with actual Twitter handle
-    creator: "@bonhoeffermachines",
-    title: "Bonhoeffer Machines | Industrial Equipment Catalogs",
-    description: "Browse comprehensive digital catalogs of industrial machinery and equipment.",
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "BM Catalog",
+    title: "Stevron Tools Catalog",
   },
-  applicationName: "Bonhoeffer Machines Catalog",
+  applicationName: "Stevron Tools Catalog",
   generator: "Next.js",
   manifest: "/manifest.json",
 };
@@ -108,8 +101,8 @@ export default function RootLayout({ children }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              "name": "Bonhoeffer Machines",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://catalog.bonhoeffermachines.com",
+              "name": "Stevron Tools",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://catalog.stevrontools.com",
               "description": "Industrial machinery and equipment manufacturer providing comprehensive digital catalogs and technical documentation.",
               "industry": "Industrial Equipment Manufacturing",
               "foundingDate": "1950", // Update with actual founding date
@@ -133,18 +126,18 @@ export default function RootLayout({ children }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "Bonhoeffer Machines Catalog",
-              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://catalog.bonhoeffermachines.com",
+              "name": "Stevron Tools Catalog",
+              "url": process.env.NEXT_PUBLIC_SITE_URL || "https://catalog.stevrontools.com",
               "description": "Digital catalog platform for industrial machinery and equipment specifications.",
               "publisher": {
                 "@type": "Organization",
-                "name": "Bonhoeffer Machines"
+                "name": "Stevron Tools"
               },
               "potentialAction": {
                 "@type": "SearchAction",
                 "target": {
                   "@type": "EntryPoint",
-                  "urlTemplate": `${process.env.NEXT_PUBLIC_SITE_URL || "https://catalog.bonhoeffermachines.com"}/search?q={search_term_string}`
+                  "urlTemplate": `${process.env.NEXT_PUBLIC_SITE_URL || "https://catalog.stevrontools.com"}/search?q={search_term_string}`
                 },
                 "query-input": "required name=search_term_string"
               }

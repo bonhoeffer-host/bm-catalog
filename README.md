@@ -1,7 +1,7 @@
-# 📚 Bonhoeffer Machines Catalog
+# 📚 Stevron Tools Catalog
 
 <div align="center">
-  <img src="public/logo.png" alt="Bonhoeffer Machines" width="200" height="60">
+  <img src="public/logo.png" alt="Stevron Tools" width="200" height="60">
   
   **Interactive Digital Catalog Platform for Industrial Equipment**
   
@@ -15,7 +15,7 @@
 
 ## 🌟 Overview
 
-A modern, responsive digital catalog platform built for Bonhoeffer Machines to showcase industrial equipment with an immersive, interactive experience. Features include a flipbook-style viewer for desktop, mobile-optimized layouts, and comprehensive catalog management.
+A modern, responsive digital catalog platform built for Stevron Tools to showcase industrial equipment with an immersive, interactive experience. Features include a flipbook-style viewer for desktop, mobile-optimized layouts, and comprehensive catalog management.
 
 ### ✨ Key Features
 
@@ -168,7 +168,7 @@ frontend/
 Create a `.env.local` file in the root directory:
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://catalog.bonhoeffermachines.com
+NEXT_PUBLIC_SITE_URL=https://catalog.stevrontools.com
 ```
 
 ### Tailwind CSS v4
@@ -212,7 +212,7 @@ The project uses the latest Tailwind CSS v4 with updated configuration in `postc
 
 ## 📄 License
 
-This project is proprietary and confidential. All rights reserved by Bonhoeffer Machines.
+This project is proprietary and confidential. All rights reserved by Stevron Tools.
 
 ---
 

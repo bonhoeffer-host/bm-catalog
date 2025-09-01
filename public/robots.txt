@@ -1,4 +1,4 @@
-# Robots.txt for Bonhoeffer Machines Catalog
+# Robots.txt for Stevron Tools Catalog
 
 User-agent: *
 Allow: /
@@ -11,9 +11,6 @@ Allow: /api/
 Disallow: /private/
 Disallow: /_next/
 Disallow: /api/internal/
-
-# Sitemap location
-Sitemap: https://catalog.bonhoeffermachines.com/sitemap.xml
 
 # Crawl delay (optional - adjust based on server capacity)
 Crawl-delay: 1
