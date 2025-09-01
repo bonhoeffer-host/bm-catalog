@@ -255,7 +255,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                       }}
                     >
                       <img
-                        src={`/pages/${catalog.slug}/${catalog.slug}-${p}_1.webp`}
+                        src={`/pages/${catalog.slug}/${catalog.slug}_1.webp`}
                         alt={`Page ${p}`}
                         style={{ transform: `scale(${zoom})` }}
                         className="object-contain max-h-full max-w-full rounded-lg"
