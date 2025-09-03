@@ -21,8 +21,11 @@ export default async function CatalogViewer({ params, searchParams }) {
       .readdirSync(imagesDir)
       .filter((f) => f.endsWith(".webp"))
       .sort((a, b) => {
-        // Sort by page number
-        const getNum = (name) => parseInt(name.split("-")[1]);
+        // Sort by page number - extract number after underscore and before .webp
+        const getNum = (name) => {
+          const match = name.match(/_(\d+)\.webp$/);
+          return match ? parseInt(match[1], 10) : 0;
+        };
         return getNum(a) - getNum(b);
       });
   } catch (e) {
