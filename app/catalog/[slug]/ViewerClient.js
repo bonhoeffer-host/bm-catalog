@@ -19,20 +19,26 @@ export default function ViewerClient({ catalog, images, searchParams }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [showThumbs, setShowThumbs] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [shareCurrent, setShareCurrent] = useState(false);
   const [copied, setCopied] = useState(false);
   const bookRef = useRef();
   const containerRef = useRef();
   const isMobileView = typeof window !== "undefined" && window.innerWidth < 640;
 
-  // Handle ?page=X in URL
+  // Navigate to initial page when flipbook is ready
   useEffect(() => {
-    if (shareCurrent) {
-      const url = new URL(window.location.href);
-      url.searchParams.set("page", currentPage);
-      window.history.replaceState({}, "", url.toString());
+    if (bookRef.current && initialPage > 1) {
+      const timer = setTimeout(() => {
+        try {
+          if (bookRef.current) {
+            bookRef.current.pageFlip().turnToPage(initialPage - 1);
+          }
+        } catch (error) {
+          console.log('Initial page navigation error:', error);
+        }
+      }, 300);
+      return () => clearTimeout(timer);
     }
-  }, [currentPage, shareCurrent]);
+  }, [initialPage]);
 
   useEffect(() => {
     function handleKey(e) {
@@ -107,9 +113,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
   // Share
   const shareUrl = () => {
     if (typeof window === "undefined") return "";
-    let url = `${window.location.origin}/catalog/${catalog.slug}`;
-    if (shareCurrent) url += `?page=${currentPage}`;
-    return url;
+    return `${window.location.origin}/catalog/${catalog.slug}`;
   };
   const copyLink = () => {
     if (typeof navigator !== "undefined") {
@@ -190,7 +194,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
         url: `mailto:?subject=${encodeURIComponent(catalog.title)}&body=${encodeURIComponent(url)}`,
       },
     ];
-  }, [catalog.slug, catalog.title, currentPage, shareCurrent]);
+  }, [catalog.slug, catalog.title]);
 
   return (
     <div ref={containerRef} className="h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col relative overflow-hidden">
@@ -286,6 +290,7 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                   mobileScrollSupport={true}
                   ref={bookRef}
                   onFlip={(e) => setCurrentPage(e.data + 1)}
+                  startPage={initialPage > 1 ? initialPage - 1 : 0}
                   className="mx-auto"
                   key={`flipbook-${catalog.slug}`} // Stable key based on catalog
                 >
@@ -575,18 +580,6 @@ export default function ViewerClient({ catalog, images, searchParams }) {
                     </motion.a>
                   ))}
                 </div>
-              </div>
-              
-              <div className="mb-4">
-                <label className="flex items-center gap-3 text-gray-300 mb-4">
-                  <input 
-                    type="checkbox" 
-                    checked={shareCurrent} 
-                    onChange={e => setShareCurrent(e.target.checked)}
-                    className="w-4 h-4 text-[#989b2e] bg-gray-700 border-gray-600 rounded focus:ring-[#989b2e] focus:ring-2"
-                  />
-                  <span className="text-sm">Share current page number</span>
-                </label>
               </div>
               
               <div className="flex gap-2 items-center">
